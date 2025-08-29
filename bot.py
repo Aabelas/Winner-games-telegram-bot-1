@@ -2,6 +2,7 @@ import os
 import sqlite3
 from datetime import date
 from typing import Optional
+import json
 
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, Update
@@ -182,7 +183,7 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Play Mini App
     if data == "play":
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎮 Open Mini App", web_app=WebAppInfo(url="https://legendary-bavarois-04204e.netlify.app/"))],
+            [InlineKeyboardButton("🎮 Open winner game", web_app=WebAppInfo(url="https://legendary-bavarois-04204e.netlify.app/"))],
             [InlineKeyboardButton("◀ Back", callback_data="main")]
         ])
         await edit_or_reply(update, "🎮 Click below to open the mini app:", keyboard)
@@ -285,7 +286,6 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.message.web_app_data:
         data = update.message.web_app_data.data
-        import json
         data_dict = json.loads(data)
         action = data_dict.get("action")
         value = data_dict.get("value")
