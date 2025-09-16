@@ -1,11 +1,17 @@
 import os
 import sqlite3
+import json
+import logging
 from datetime import date
 from typing import Optional
-import json
 
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    WebAppInfo,
+    Update,
+)
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -16,10 +22,19 @@ from telegram.ext import (
 )
 
 # =========================
+# Logging
+# =========================
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
+
+# =========================
 # Load Config / Token
 # =========================
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Environment variable name
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("Bot token not found. Please set BOT_TOKEN in environment variables.")
 
@@ -101,7 +116,7 @@ def kb_main() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("ℹ️ Help", callback_data="help"),
-            InlineKeyboardButton("Next ▶", callback_data="page2"),
+            InlineKeyboardButton("Next ▶️", callback_data="page2"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -109,20 +124,20 @@ def kb_main() -> InlineKeyboardMarkup:
 def kb_page2() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("📞 Support", callback_data="support")],
-        [InlineKeyboardButton("🛈 About", callback_data="about")],
-        [InlineKeyboardButton("◀ Back", callback_data="main")],
+        [InlineKeyboardButton("🚀 About", callback_data="about")],
+        [InlineKeyboardButton("◀️ Back", callback_data="main")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
 def kb_back_main() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[InlineKeyboardButton("◀ Back to Menu", callback_data="main")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back to Menu", callback_data="main")]])
 
 def kb_deposit_methods() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📲 Telebirr", callback_data="deposit_tb")],
+        [InlineKeyboardButton("📱 Telebirr", callback_data="deposit_tb")],
         [InlineKeyboardButton("🏦 Bank Transfer", callback_data="deposit_bank")],
-        [InlineKeyboardButton("🪙 USDT (TRC20)", callback_data="deposit_crypto")],
-        [InlineKeyboardButton("◀ Back", callback_data="main")],
+        [InlineKeyboardButton("💎 USDT (TRC20)", callback_data="deposit_crypto")],
+        [InlineKeyboardButton("◀️ Back", callback_data="main")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -149,17 +164,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username)
     await update.message.reply_text(
-        "🎉 Welcome to Winner Games!\n\nChoose an option below:",
+        "🎉 Welcome to *Winner Games*!\n\nChoose an option below:",
         reply_markup=kb_main(),
+        parse_mode="Markdown",
     )
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "ℹ️ Use the menu buttons to navigate.\n"
+        "ℹ️ *Help Menu*\n\n"
         "• 💰 Deposit: see payment options\n"
         "• 🎁 Bonus: claim your daily reward\n"
         "• 👤 Profile: view your balance\n",
         reply_markup=kb_main(),
+        parse_mode="Markdown",
     )
 
 # =========================
@@ -183,8 +200,8 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Play Mini App
     if data == "play":
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎮 Open winner game", web_app=WebAppInfo(url="https://legendary-bavarois-04204e.netlify.app/"))],
-            [InlineKeyboardButton("◀ Back", callback_data="main")]
+            [InlineKeyboardButton("🎮 Open Winner Game", web_app=WebAppInfo(url="https://legendary-bavarois-04204e.netlify.app/"))],
+            [InlineKeyboardButton("◀️ Back", callback_data="main")]
         ])
         await edit_or_reply(update, "🎮 Click below to open the mini app:", keyboard)
         return
@@ -206,14 +223,14 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "help":
         await edit_or_reply(
             update,
-            "ℹ️ Help\n\nFor support, choose Support on the next page or contact the admin.\nUse Bonus daily to get free coins.",
+            "ℹ️ Help\n\nFor support, choose *Support* on the next page or contact the admin.\nUse Bonus daily to get free coins.",
             kb_back_main(),
         )
         return
 
     # About
     if data == "about":
-        await edit_or_reply(update, "🛈 About Winner Games\nA simple mini-games hub with rewards and fair play.", kb_back_main())
+        await edit_or_reply(update, "🚀 About Winner Games\nA simple mini-games hub with rewards and fair play.", kb_back_main())
         return
 
     # Support
@@ -229,21 +246,25 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "deposit_tb":
         await edit_or_reply(
             update,
-            "📲 Telebirr Deposit\n1) Open Telebirr and send to: 09xx-xxx-xxx\n2) Amount: your choice (min 50 ETB)\n3) After payment, tap 'I've Paid' and send the receipt to support.\n⚠️ Manual verification required.",
+            "📱 *Telebirr Deposit*\n"
+            "1) Open Telebirr and send to: `09xx-xxx-xxx`\n"
+            "2) Amount: minimum 50 ETB\n"
+            "3) After payment, tap *I've Paid* and send the receipt to support.\n\n"
+            "⚠️ Manual verification required.",
             InlineKeyboardMarkup([
                 [InlineKeyboardButton("✅ I've Paid", callback_data="paid_tb")],
-                [InlineKeyboardButton("◀ Back", callback_data="deposit")],
+                [InlineKeyboardButton("◀️ Back", callback_data="deposit")],
             ]),
-        )
+            )
         return
 
     if data == "deposit_bank":
         await edit_or_reply(
             update,
-            "🏦 Bank Transfer\nBank: XYZ Bank\nAccount: 123456789\nName: Winner Games\nSend and then tap 'I've Paid'.",
+            "🏦 *Bank Transfer*\nBank: XYZ Bank\nAccount: 123456789\nName: Winner Games\n\nSend and then tap *I've Paid*.",
             InlineKeyboardMarkup([
                 [InlineKeyboardButton("✅ I've Paid", callback_data="paid_bank")],
-                [InlineKeyboardButton("◀ Back", callback_data="deposit")],
+                [InlineKeyboardButton("◀️ Back", callback_data="deposit")],
             ]),
         )
         return
@@ -251,10 +272,10 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "deposit_crypto":
         await edit_or_reply(
             update,
-            "🪙 USDT (TRC20)\nAddress: TRxxx…xxxx\nSend and then tap 'I've Paid'.",
+            "💎 *USDT (TRC20)*\nAddress: `TRxxx…xxxx`\n\nSend and then tap *I've Paid*.",
             InlineKeyboardMarkup([
                 [InlineKeyboardButton("✅ I've Paid", callback_data="paid_crypto")],
-                [InlineKeyboardButton("◀ Back", callback_data="deposit")],
+                [InlineKeyboardButton("◀️ Back", callback_data="deposit")],
             ]),
         )
         return
@@ -309,7 +330,7 @@ async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         await update.message.reply_text(
-            "❓ Sorry, I didn't understand that command. Please use the menu buttons.",
+            "❌ Sorry, I didn't understand that command. Please use the menu buttons.",
             reply_markup=kb_main(),
         )
 
@@ -325,7 +346,7 @@ def main():
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_webapp_data))
     app.add_handler(MessageHandler(filters.COMMAND, unknown))
 
-    print("🤖 Bot is running...")
+    logger.info("🤖 Bot is starting...")
     app.run_polling()
 
 if __name__ == "__main__":
