@@ -202,7 +202,7 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Play Mini App
     if data == "play":
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎮 Open Winner Game", web_app=WebAppInfo(url="https://legendary-bavarois-04204e.netlify.app/"))],
+            [InlineKeyboardButton("🎮 Open Winner Game", web_app=WebAppInfo(url="https://winner-games-82du2y7f4-aabelas-projects.vercel.app/"))],
             [InlineKeyboardButton("⏹️ Back", callback_data="main")]
         ])
         await edit_or_reply(update, "🎮 Click below to open the mini app:", keyboard)
